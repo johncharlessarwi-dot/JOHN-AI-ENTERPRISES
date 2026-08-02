@@ -50,8 +50,8 @@ export function DashboardView({ stats, chats, onNavigateTab }: DashboardViewProp
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              AI System Active
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+              <Smartphone className="w-3.5 h-3.5" /> WhatsApp Active: +255 698 170 989
             </span>
             <span className="text-slate-500 text-xs">• John Online Services</span>
           </div>

@@ -245,6 +245,31 @@ app.get("/api/whatsapp/engine/status", (req, res) => {
   res.json(whatsAppEngineService.getStatus());
 });
 
+app.get("/api/whatsapp/config", (req, res) => {
+  res.json(whatsAppEngineService.getConfig());
+});
+
+app.post("/api/whatsapp/config", (req, res) => {
+  const result = whatsAppEngineService.saveConfig(req.body);
+  res.json(result);
+});
+
+app.post("/api/whatsapp/toggle", (req, res) => {
+  const { connected } = req.body;
+  const status = whatsAppEngineService.setConnectionState(connected);
+  res.json({ success: true, status });
+});
+
+app.post("/api/whatsapp/test-dm", async (req, res) => {
+  try {
+    const { recipient, message } = req.body;
+    const result = await whatsAppEngineService.testRealDm(recipient, message);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
 app.post("/api/whatsapp/engine/webhook", async (req, res) => {
   try {
     const normalized = await whatsAppEngineService.processIncomingMessage(req.body);

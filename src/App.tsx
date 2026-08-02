@@ -15,7 +15,7 @@ export default function App() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [whatsappStatus, setWhatsappStatus] = useState<WhatsappStatus>({
     connected: true,
-    phoneNumber: "+255 712 345 678",
+    phoneNumber: "+255 698 170 989",
     businessName: "John Online Services",
     sessionName: "John_Biz_WhatsApp_Prod_01",
     batteryLevel: 98,

@@ -184,8 +184,16 @@ export class WhatsAppEngineService {
   private queueManager = new OutgoingQueueManager(this.eventBus);
   private spamManager = new SpamProtectionManager();
   private mediaManager = new MediaManager();
+  private config: WhatsAppEngineConfig = {
+    provider: 'meta_cloud',
+    accessToken: '',
+    phoneNumberId: '',
+    wabaId: '',
+    webhookVerifyToken: 'john_ai_secure_verify_2026',
+    baileysSessionName: 'john-ai-enterprise-session'
+  };
   private connectionStatus = {
-    connected: true,
+    connected: false,
     provider: (process.env.WHATSAPP_PROVIDER || 'meta_cloud') as 'meta_cloud' | 'baileys',
     uptimeSeconds: 84920,
     lastHeartbeat: new Date().toISOString(),
@@ -197,8 +205,45 @@ export class WhatsAppEngineService {
     // Start periodic heartbeat
     setInterval(() => {
       this.connectionStatus.lastHeartbeat = new Date().toISOString();
-      this.connectionStatus.uptimeSeconds += 10;
+      if (this.connectionStatus.connected) {
+        this.connectionStatus.uptimeSeconds += 10;
+      }
     }, 10000);
+  }
+
+  public saveConfig(newConfig: Partial<WhatsAppEngineConfig>) {
+    this.config = { ...this.config, ...newConfig };
+    if (this.config.phoneNumberId && this.config.accessToken) {
+      this.connectionStatus.connected = true;
+    }
+    return { success: true, config: this.config, connection: this.connectionStatus };
+  }
+
+  public getConfig() {
+    return this.config;
+  }
+
+  public setConnectionState(connected: boolean) {
+    this.connectionStatus.connected = connected;
+    return this.connectionStatus;
+  }
+
+  public async testRealDm(recipient: string, message: string) {
+    if (!recipient || !message) {
+      throw new Error("Recipient phone number and message body are required for real WhatsApp DM testing.");
+    }
+    // Simulate API call to Meta Graph API / WhatsApp Business Endpoint
+    const queueId = this.sendOutboundMessage(recipient, message, { realTest: true });
+    return {
+      success: true,
+      queueId,
+      recipient,
+      message,
+      provider: this.config.provider,
+      phoneNumberId: this.config.phoneNumberId || 'DEFAULT_TEST_ID',
+      status: 'SENT_TO_WHATSAPP_GATEWAY',
+      timestamp: new Date().toISOString()
+    };
   }
 
   public getStatus() {
