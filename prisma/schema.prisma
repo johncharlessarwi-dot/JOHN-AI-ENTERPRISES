@@ -1,0 +1,214 @@
+// John AI Enterprise WhatsApp OS - Part 3 Prisma Schema
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum RoleType {
+  SUPER_ADMIN
+  ADMIN
+  STAFF
+  AGENT
+}
+
+enum LeadStageType {
+  AWARENESS
+  INTEREST
+  QUALIFIED
+  DECISION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum MessageSender {
+  CUSTOMER
+  AI
+  AGENT
+}
+
+enum DocumentStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  ARCHIVED
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  fullName      String
+  phone         String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  roles         UserRole[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  roleId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionKey String
+
+  role         Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionKey])
+}
+
+model Customer {
+  id              String   @id @default(uuid())
+  phone           String   @unique
+  fullName        String?
+  email           String?
+  preferredLang   String   @default("Swahili")
+  leadStage       LeadStageType @default(AWARENESS)
+  leadScore       Int      @default(50)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  conversations   Conversation[]
+  notes           CustomerNote[]
+  activities      CustomerActivity[]
+
+  @@index([phone])
+}
+
+model CustomerNote {
+  id         String   @id @default(uuid())
+  customerId String
+  authorId   String
+  note       String
+  createdAt  DateTime @default(now())
+
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model CustomerActivity {
+  id          String   @id @default(uuid())
+  customerId  String
+  activityType String
+  description String
+  createdAt   DateTime @default(now())
+
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id             String    @id @default(uuid())
+  customerId     String
+  status         String    @default("Active") // Active, Handover, Closed
+  assignedAgentId String?
+  lastMessageAt  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  customer       Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  messages       Message[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model Message {
+  id               String        @id @default(uuid())
+  conversationId   String
+  sender           MessageSender @default(CUSTOMER)
+  messageType      String        @default("text") // text, image, audio, document, etc.
+  body             String
+  rawPayload       Json?
+  deliveryStatus   String        @default("sent") // sent, delivered, read, failed
+  readStatus       Boolean       @default(false)
+  language         String        @default("Swahili")
+  intent           String?
+  confidenceScore  Float?
+  createdAt        DateTime      @default(now())
+
+  conversation     Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+model KnowledgeDocument {
+  id            String         @id @default(uuid())
+  title         String
+  category      String
+  tags          String[]
+  language      String         @default("Swahili")
+  version       Int            @default(1)
+  author        String
+  status        DocumentStatus @default(PENDING_REVIEW)
+  content       String
+  embedding     Json?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status])
+  @@index([category])
+}
+
+model PromptTemplate {
+  id          String   @id @default(uuid())
+  title       String
+  version     Int      @default(1)
+  promptText  String
+  category    String   @default("sales")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ServiceItem {
+  id          String   @id @default(uuid())
+  title       String
+  category    String
+  priceTzs    Float
+  description String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  details    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([createdAt])
+}
