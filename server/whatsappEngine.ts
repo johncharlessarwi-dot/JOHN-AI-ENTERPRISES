@@ -220,7 +220,7 @@ export class WhatsAppEngineService {
   }
 
   public getConfig() {
-    return this.config;
+    return { ...this.config, accessToken: this.config.accessToken ? '[REDACTED]' : '' };
   }
 
   public setConnectionState(connected: boolean) {
