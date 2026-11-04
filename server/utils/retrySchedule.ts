@@ -1,0 +1,1 @@
+export function retryDelayMs(attempt: number): number { if(!Number.isSafeInteger(attempt) || attempt<0)throw new RangeError('Invalid attempt'); return Math.min(60000,500*Math.pow(2,Math.min(10,attempt))); }
