@@ -216,7 +216,7 @@ export class WhatsAppEngineService {
     if (this.config.phoneNumberId && this.config.accessToken) {
       this.connectionStatus.connected = true;
     }
-    return { success: true, config: this.config, connection: this.connectionStatus };
+    return { success: true, config: this.getConfig(), connection: this.connectionStatus };
   }
 
   public getConfig() {
