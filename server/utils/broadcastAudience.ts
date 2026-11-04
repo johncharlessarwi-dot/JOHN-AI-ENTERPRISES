@@ -1,0 +1,1 @@
+export function normalizeAudience(input: string): 'all'|'leads'|'customers'|'vip' { const v=input.trim().toLowerCase(); return ['all','leads','customers','vip'].includes(v) ? v as 'all'|'leads'|'customers'|'vip' : 'all'; }
