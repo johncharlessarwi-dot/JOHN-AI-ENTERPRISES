@@ -67,7 +67,7 @@ export class WhatsAppEventBus extends EventEmitter {
   }
 
   public getEventLog() {
-    return this.eventLog;
+    return this.eventLog.map(({ event, timestamp }) => ({ event, timestamp }));
   }
 }
 
