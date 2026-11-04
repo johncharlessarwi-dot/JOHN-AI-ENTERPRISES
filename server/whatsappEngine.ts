@@ -189,7 +189,7 @@ export class WhatsAppEngineService {
     accessToken: '',
     phoneNumberId: '',
     wabaId: '',
-    webhookVerifyToken: 'john_ai_secure_verify_2026',
+    webhookVerifyToken: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || '',
     baileysSessionName: 'john-ai-enterprise-session'
   };
   private connectionStatus = {
