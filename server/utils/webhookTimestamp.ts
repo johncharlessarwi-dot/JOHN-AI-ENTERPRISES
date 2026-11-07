@@ -1,1 +1,1 @@
-export function validWebhookTimestamp(timestamp: number, now=Date.now(), toleranceMs=300000): boolean { return Number.isFinite(timestamp) && Number.isFinite(now) && Math.abs(now-timestamp)<=toleranceMs; }
+export function validWebhookTimestamp(timestamp: number, now=Date.now(), toleranceMs=300000): boolean { return Number.isFinite(timestamp) && Number.isFinite(now) && Number.isFinite(toleranceMs) && toleranceMs >= 0 && Math.abs(now-timestamp)<=toleranceMs; }
