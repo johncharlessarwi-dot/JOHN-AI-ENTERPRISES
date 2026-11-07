@@ -56,3 +56,7 @@ test("reject enterprise token control characters", () => {
 test("reject non-string enterprise authorization", () => {
   assert.equal(verifyApiToken(123, API_TOKEN), false);
 });
+
+test("reject future webhook events beyond tolerance", () => {
+  assert.equal(validWebhookTimestamp(400_001, 0, 300_000), false);
+});
