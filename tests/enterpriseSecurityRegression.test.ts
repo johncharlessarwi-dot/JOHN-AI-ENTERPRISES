@@ -20,3 +20,7 @@ test("accept valid enterprise API bearer token", () => {
 test("reject missing enterprise API header", () => {
   assert.equal(verifyApiToken(undefined, API_TOKEN), false);
 });
+
+test("reject missing enterprise server secret", () => {
+  assert.equal(verifyApiToken('Bearer ' + API_TOKEN, undefined), false);
+});
