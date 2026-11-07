@@ -108,3 +108,7 @@ test("reject Unicode bidirectional outgoing spoof", () => {
 test("allow ordinary multiline outgoing messages", () => {
   assert.equal(validateOutgoingText('Hello\nHabari'), true);
 });
+
+test("reject appointment with NaN reference time", () => {
+  assert.equal(appointmentWithinWindow('2026-11-07T12:00:00Z', NaN), false);
+});
