@@ -1,1 +1,1 @@
-export function taskIsOverdue(dueDate: string, today: string): boolean { const d=Date.parse(dueDate),t=Date.parse(today); return Number.isFinite(d)&&Number.isFinite(t)&&d<t; }
+export function taskIsOverdue(dueDate: string, today: string): boolean { const d=Date.parse(dueDate),t=Date.parse(today); return typeof dueDate === 'string' && typeof today === 'string' && Number.isFinite(d)&&Number.isFinite(t)&&d<t; }
