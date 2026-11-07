@@ -100,3 +100,7 @@ test("reject newline-spoofed Tanzania phone", () => {
 test("accept properly formatted Tanzania phone", () => {
   assert.equal(normalizeTanzaniaPhone('0698 170 989'), '+255698170989');
 });
+
+test("reject Unicode bidirectional outgoing spoof", () => {
+  assert.equal(validateOutgoingText('Hello\u202Ehidden'), false);
+});
