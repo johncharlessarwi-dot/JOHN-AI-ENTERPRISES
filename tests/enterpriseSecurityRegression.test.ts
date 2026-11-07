@@ -68,3 +68,7 @@ test("reject NaN webhook reference clocks", () => {
 test("reject infinite webhook reference clocks", () => {
   assert.equal(validWebhookTimestamp(1000, Infinity), false);
 });
+
+test("reject negative webhook tolerance windows", () => {
+  assert.equal(validWebhookTimestamp(1000, 1000, -1), false);
+});
