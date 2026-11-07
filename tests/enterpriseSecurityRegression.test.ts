@@ -48,3 +48,7 @@ test("reject incorrect enterprise API token", () => {
 test("reject enterprise token prefix only", () => {
   assert.equal(verifyApiToken('Bearer ' + API_TOKEN.slice(0, 33), API_TOKEN), false);
 });
+
+test("reject enterprise token control characters", () => {
+  assert.equal(verifyApiToken('Bearer ' + API_TOKEN + '\n', API_TOKEN), false);
+});
