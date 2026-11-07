@@ -124,3 +124,7 @@ test("reject excessively long appointment windows", () => {
 test("reject malformed task dates", () => {
   assert.equal(taskIsOverdue('not-a-date', '2026-11-07'), false);
 });
+
+test("sanitize control characters in event summaries", () => {
+  assert.deepEqual(safeEventSummary('send\nspoof', '2026'), {event:'sendspoof',timestamp:'2026'});
+});
