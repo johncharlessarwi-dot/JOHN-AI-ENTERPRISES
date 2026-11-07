@@ -1,1 +1,1 @@
-export function normalizeTanzaniaPhone(input: string): string | null { const d=input.replace(/[\s()-]/g,''); if(/^0[67]\d{8}$/.test(d))return '+255'+d.slice(1); if(/^255[67]\d{8}$/.test(d))return '+'+d; if(/^\+255[67]\d{8}$/.test(d))return d; return null; }
+export function normalizeTanzaniaPhone(input: string): string | null { if (typeof input !== 'string' || input.length > 64) return null; const d=input.replace(/[\s()-]/g,''); if(/^0[67]\d{8}$/.test(d))return '+255'+d.slice(1); if(/^255[67]\d{8}$/.test(d))return '+'+d; if(/^\+255[67]\d{8}$/.test(d))return d; return null; }
