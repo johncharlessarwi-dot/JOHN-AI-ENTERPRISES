@@ -128,3 +128,7 @@ test("reject malformed task dates", () => {
 test("sanitize control characters in event summaries", () => {
   assert.deepEqual(safeEventSummary('send\nspoof', '2026'), {event:'sendspoof',timestamp:'2026'});
 });
+
+test("limit event summary timestamp length", () => {
+  assert.equal(safeEventSummary('sent', 'x'.repeat(100)).timestamp.length, 64);
+});
