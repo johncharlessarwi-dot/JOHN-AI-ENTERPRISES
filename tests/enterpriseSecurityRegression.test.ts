@@ -112,3 +112,7 @@ test("allow ordinary multiline outgoing messages", () => {
 test("reject appointment with NaN reference time", () => {
   assert.equal(appointmentWithinWindow('2026-11-07T12:00:00Z', NaN), false);
 });
+
+test("reject negative appointment window", () => {
+  assert.equal(appointmentWithinWindow('2026-11-07T12:00:00Z', Date.parse('2026-11-07T00:00:00Z'), -1), false);
+});
