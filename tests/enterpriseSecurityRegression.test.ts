@@ -60,3 +60,7 @@ test("reject non-string enterprise authorization", () => {
 test("reject future webhook events beyond tolerance", () => {
   assert.equal(validWebhookTimestamp(400_001, 0, 300_000), false);
 });
+
+test("reject NaN webhook reference clocks", () => {
+  assert.equal(validWebhookTimestamp(1000, NaN), false);
+});
