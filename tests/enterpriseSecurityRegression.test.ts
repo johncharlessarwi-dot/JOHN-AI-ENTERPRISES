@@ -116,3 +116,7 @@ test("reject appointment with NaN reference time", () => {
 test("reject negative appointment window", () => {
   assert.equal(appointmentWithinWindow('2026-11-07T12:00:00Z', Date.parse('2026-11-07T00:00:00Z'), -1), false);
 });
+
+test("reject excessively long appointment windows", () => {
+  assert.equal(appointmentWithinWindow('2026-11-07T12:00:00Z', Date.parse('2026-11-07T00:00:00Z'), 8761), false);
+});
