@@ -40,3 +40,7 @@ test("reject invalid enterprise token scheme", () => {
 test("reject malformed enterprise authorization whitespace", () => {
   assert.equal(verifyApiToken('Bearer  ' + API_TOKEN, API_TOKEN), false);
 });
+
+test("reject incorrect enterprise API token", () => {
+  assert.equal(verifyApiToken('Bearer ' + 'z'.repeat(36), API_TOKEN), false);
+});
