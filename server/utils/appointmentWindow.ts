@@ -1,1 +1,1 @@
-export function appointmentWithinWindow(isoDate: string, now: number, hours=24): boolean { const time=Date.parse(isoDate); return Number.isFinite(now)&&Number.isFinite(time)&&time>=now&&time-now<=hours*3600000; }
+export function appointmentWithinWindow(isoDate: string, now: number, hours=24): boolean { const time=Date.parse(isoDate); return Number.isFinite(now)&&Number.isFinite(time)&&Number.isFinite(hours)&&hours>=0&&hours<=8760&&time>=now&&time-now<=hours*3600000; }
