@@ -104,3 +104,7 @@ test("accept properly formatted Tanzania phone", () => {
 test("reject Unicode bidirectional outgoing spoof", () => {
   assert.equal(validateOutgoingText('Hello\u202Ehidden'), false);
 });
+
+test("allow ordinary multiline outgoing messages", () => {
+  assert.equal(validateOutgoingText('Hello\nHabari'), true);
+});
