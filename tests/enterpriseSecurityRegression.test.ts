@@ -36,3 +36,7 @@ test("reject overly long enterprise server secret", () => {
 test("reject invalid enterprise token scheme", () => {
   assert.equal(verifyApiToken('Basic ' + API_TOKEN, API_TOKEN), false);
 });
+
+test("reject malformed enterprise authorization whitespace", () => {
+  assert.equal(verifyApiToken('Bearer  ' + API_TOKEN, API_TOKEN), false);
+});
