@@ -28,3 +28,7 @@ test("reject missing enterprise server secret", () => {
 test("reject undersized enterprise server secret", () => {
   assert.equal(verifyApiToken('Bearer short', 'short'), false);
 });
+
+test("reject overly long enterprise server secret", () => {
+  assert.equal(verifyApiToken('Bearer ' + API_TOKEN, 'x'.repeat(513)), false);
+});
