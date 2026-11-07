@@ -132,3 +132,7 @@ test("sanitize control characters in event summaries", () => {
 test("limit event summary timestamp length", () => {
   assert.equal(safeEventSummary('sent', 'x'.repeat(100)).timestamp.length, 64);
 });
+
+test("never broaden unknown broadcast audiences to everyone", () => {
+  assert.equal(normalizeAudience('not-real'), 'leads');
+});
