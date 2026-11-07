@@ -84,3 +84,7 @@ test("reject fractional webhook timestamps", () => {
 test("accept valid webhook timestamp window", () => {
   assert.equal(validWebhookTimestamp(1000, 1000, 300_000), true);
 });
+
+test("reject nonstring Tanzania phone input", () => {
+  assert.equal(normalizeTanzaniaPhone(123 as never), null);
+});
