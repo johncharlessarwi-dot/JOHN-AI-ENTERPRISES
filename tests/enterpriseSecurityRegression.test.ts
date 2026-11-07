@@ -64,3 +64,7 @@ test("reject future webhook events beyond tolerance", () => {
 test("reject NaN webhook reference clocks", () => {
   assert.equal(validWebhookTimestamp(1000, NaN), false);
 });
+
+test("reject infinite webhook reference clocks", () => {
+  assert.equal(validWebhookTimestamp(1000, Infinity), false);
+});
