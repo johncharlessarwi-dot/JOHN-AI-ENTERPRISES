@@ -52,3 +52,7 @@ test("reject enterprise token prefix only", () => {
 test("reject enterprise token control characters", () => {
   assert.equal(verifyApiToken('Bearer ' + API_TOKEN + '\n', API_TOKEN), false);
 });
+
+test("reject non-string enterprise authorization", () => {
+  assert.equal(verifyApiToken(123, API_TOKEN), false);
+});
