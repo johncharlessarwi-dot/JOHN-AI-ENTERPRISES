@@ -5,5 +5,5 @@ export function validateOutgoingText(value: unknown): value is string {
   }
 
   // Disallow non-printable ASCII controls and DEL, while preserving line breaks.
-  return !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/.test(value);
+  return !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u202A-\u202E\u2066-\u2069]/.test(value);
 }
