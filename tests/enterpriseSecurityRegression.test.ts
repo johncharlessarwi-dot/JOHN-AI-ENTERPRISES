@@ -16,3 +16,7 @@ const API_TOKEN = 'abcdefghijklmnopqrstuvwxyz0123456789';
 test("accept valid enterprise API bearer token", () => {
   assert.equal(verifyApiToken('Bearer ' + API_TOKEN, API_TOKEN), true);
 });
+
+test("reject missing enterprise API header", () => {
+  assert.equal(verifyApiToken(undefined, API_TOKEN), false);
+});
