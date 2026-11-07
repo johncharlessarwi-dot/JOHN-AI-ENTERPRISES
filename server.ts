@@ -1,4 +1,5 @@
 import express from "express";
+import { verifyApiToken } from "./server/utils/apiAccess";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -12,6 +13,15 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json({ limit: "10mb" }));
+
+app.use("/api", (req, res, next) => {
+  if (req.path === "/health") return next();
+  if (process.env.NODE_ENV !== "production") return next();
+  if (!verifyApiToken(req.headers.authorization, process.env.ENTERPRISE_API_TOKEN)) {
+    return res.status(401).set("Cache-Control", "no-store").json({ error: "Authentication required" });
+  }
+  next();
+});
 
 // Initialize Gemini AI client server-side
 const ai = new GoogleGenAI({
