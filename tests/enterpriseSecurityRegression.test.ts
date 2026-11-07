@@ -96,3 +96,7 @@ test("reject oversized Tanzania phone input", () => {
 test("reject newline-spoofed Tanzania phone", () => {
   assert.equal(normalizeTanzaniaPhone('0698170989\n'), null);
 });
+
+test("accept properly formatted Tanzania phone", () => {
+  assert.equal(normalizeTanzaniaPhone('0698 170 989'), '+255698170989');
+});
