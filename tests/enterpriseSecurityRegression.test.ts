@@ -120,3 +120,7 @@ test("reject negative appointment window", () => {
 test("reject excessively long appointment windows", () => {
   assert.equal(appointmentWithinWindow('2026-11-07T12:00:00Z', Date.parse('2026-11-07T00:00:00Z'), 8761), false);
 });
+
+test("reject malformed task dates", () => {
+  assert.equal(taskIsOverdue('not-a-date', '2026-11-07'), false);
+});
