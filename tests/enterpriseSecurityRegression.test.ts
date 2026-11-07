@@ -88,3 +88,7 @@ test("accept valid webhook timestamp window", () => {
 test("reject nonstring Tanzania phone input", () => {
   assert.equal(normalizeTanzaniaPhone(123 as never), null);
 });
+
+test("reject oversized Tanzania phone input", () => {
+  assert.equal(normalizeTanzaniaPhone('0'.repeat(65)), null);
+});
