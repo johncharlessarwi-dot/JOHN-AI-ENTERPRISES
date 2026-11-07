@@ -76,3 +76,7 @@ test("reject negative webhook tolerance windows", () => {
 test("reject infinite webhook tolerance windows", () => {
   assert.equal(validWebhookTimestamp(1000, 1000, Infinity), false);
 });
+
+test("reject fractional webhook timestamps", () => {
+  assert.equal(validWebhookTimestamp(1000.5, 1000), false);
+});
