@@ -72,3 +72,7 @@ test("reject infinite webhook reference clocks", () => {
 test("reject negative webhook tolerance windows", () => {
   assert.equal(validWebhookTimestamp(1000, 1000, -1), false);
 });
+
+test("reject infinite webhook tolerance windows", () => {
+  assert.equal(validWebhookTimestamp(1000, 1000, Infinity), false);
+});
