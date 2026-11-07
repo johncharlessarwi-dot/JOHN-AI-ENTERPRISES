@@ -44,3 +44,7 @@ test("reject malformed enterprise authorization whitespace", () => {
 test("reject incorrect enterprise API token", () => {
   assert.equal(verifyApiToken('Bearer ' + 'z'.repeat(36), API_TOKEN), false);
 });
+
+test("reject enterprise token prefix only", () => {
+  assert.equal(verifyApiToken('Bearer ' + API_TOKEN.slice(0, 33), API_TOKEN), false);
+});
