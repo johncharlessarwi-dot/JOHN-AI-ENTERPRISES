@@ -5,6 +5,7 @@ import { parseChatMessage } from "./server/utils/chatMessage";
 import { parseBroadcastDraft } from "./server/utils/broadcastDraft";
 import { parseStatusPatch } from "./server/utils/statusPatch";
 import { parseKnowledgeDocument } from "./server/utils/knowledgeDocument";
+import { parseOutboundRequest } from "./server/utils/outboundRequest";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -303,11 +304,9 @@ app.post("/api/whatsapp/engine/webhook", async (req, res) => {
 });
 
 app.post("/api/whatsapp/engine/send", (req, res) => {
-  const { recipient, messageBody, options } = req.body;
-  if (!recipient || !messageBody) {
-    return res.status(400).json({ error: "Recipient and messageBody are required" });
-  }
-  const queueId = whatsAppEngineService.sendOutboundMessage(recipient, messageBody, options);
+  const parsed = parseOutboundRequest(req.body);
+  if (!parsed) return res.status(400).json({ error: "Invalid outbound request" });
+  const queueId = whatsAppEngineService.sendOutboundMessage(parsed.recipient, parsed.messageBody, parsed.options);
   res.json({ success: true, queueId, status: "queued" });
 });
 
