@@ -4,6 +4,7 @@ import { allowLocalDevApiBypass } from "./server/utils/devApiAccess";
 import { parseChatMessage } from "./server/utils/chatMessage";
 import { parseBroadcastDraft } from "./server/utils/broadcastDraft";
 import { parseStatusPatch } from "./server/utils/statusPatch";
+import { parseKnowledgeDocument } from "./server/utils/knowledgeDocument";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -226,7 +227,9 @@ app.get("/api/kb/documents", (req, res) => {
 });
 
 app.post("/api/kb/documents", (req, res) => {
-  const { title, category, size } = req.body;
+  const parsed = parseKnowledgeDocument(req.body);
+  if (!parsed) return res.status(400).json({error:"Invalid document metadata"});
+  const { title, category, size } = parsed;
   const newDoc = {
     id: "doc_" + Date.now(),
     title: title || "New Document",
