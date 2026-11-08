@@ -1,5 +1,6 @@
 import express from "express";
 import { verifyApiToken } from "./server/utils/apiAccess";
+import { allowLocalDevApiBypass } from "./server/utils/devApiAccess";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -16,7 +17,7 @@ app.use(express.json({ limit: "10mb" }));
 
 app.use("/api", (req, res, next) => {
   if (req.path === "/health") return next();
-  if (process.env.NODE_ENV !== "production") return next();
+  if (allowLocalDevApiBypass(process.env.NODE_ENV, process.env.ENTERPRISE_ALLOW_DEV_API_UNAUTH, req.socket.remoteAddress)) return next();
   if (!verifyApiToken(req.headers.authorization, process.env.ENTERPRISE_API_TOKEN)) {
     return res.status(401).set("Cache-Control", "no-store").json({ error: "Authentication required" });
   }
