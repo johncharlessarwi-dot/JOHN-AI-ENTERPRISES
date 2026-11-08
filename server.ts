@@ -1,6 +1,7 @@
 import express from "express";
 import { verifyApiToken } from "./server/utils/apiAccess";
 import { allowLocalDevApiBypass } from "./server/utils/devApiAccess";
+import { parseChatMessage } from "./server/utils/chatMessage";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -155,7 +156,9 @@ app.get("/api/chats", (req, res) => {
 
 app.post("/api/chats/:chatId/messages", async (req, res) => {
   const { chatId } = req.params;
-  const { text, sender = "customer" } = req.body;
+  const parsed = parseChatMessage(req.body);
+  if (!parsed) return res.status(400).json({error:"Invalid chat message"});
+  const { text, sender } = parsed;
 
   const chat = chats.find(c => c.id === chatId);
   if (!chat) {
