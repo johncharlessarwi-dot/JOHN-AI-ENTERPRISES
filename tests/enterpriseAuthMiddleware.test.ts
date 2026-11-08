@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authMiddleware, roleGuard } from '../server/middleware/enterpriseMiddleware.ts';
+import { authMiddleware, roleGuard, errorHandlerMiddleware } from '../server/middleware/enterpriseMiddleware.ts';
 
 function response() {
   const result:any = { statusCode:200, body:null, headers:{} };
@@ -29,4 +29,15 @@ test('role guard refuses requests without authenticated user', () => {
   roleGuard(['STAFF'])({headers:{}} as any,res,(()=>{called=true}) as any);
   assert.equal(res.statusCode,401);
   assert.equal(called,false);
+});
+
+test('error middleware never discloses internal secrets', () => {
+  const original=console.error; const logs:string[]=[]; console.error=(...args)=>logs.push(args.join(' '));
+  try {
+    const res=response();
+    errorHandlerMiddleware(new Error('private-token-value'),{} as any,res,(()=>{}) as any);
+    assert.equal(res.statusCode,500);
+    assert.doesNotMatch(JSON.stringify(res.body),/private-token-value/);
+    assert.doesNotMatch(logs.join(' '),/private-token-value/);
+  } finally {console.error=original;}
 });
