@@ -1,5 +1,11 @@
 import express from "express";
 import { verifyApiToken } from "./server/utils/apiAccess";
+import { allowLocalDevApiBypass } from "./server/utils/devApiAccess";
+import { parseChatMessage } from "./server/utils/chatMessage";
+import { parseBroadcastDraft } from "./server/utils/broadcastDraft";
+import { parseStatusPatch } from "./server/utils/statusPatch";
+import { parseKnowledgeDocument } from "./server/utils/knowledgeDocument";
+import { parseOutboundRequest } from "./server/utils/outboundRequest";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -15,8 +21,9 @@ const PORT = 3000;
 app.use(express.json({ limit: "10mb" }));
 
 app.use("/api", (req, res, next) => {
+  res.set("Cache-Control", "no-store");
   if (req.path === "/health") return next();
-  if (process.env.NODE_ENV !== "production") return next();
+  if (allowLocalDevApiBypass(process.env.NODE_ENV, process.env.ENTERPRISE_ALLOW_DEV_API_UNAUTH, req.socket.remoteAddress)) return next();
   if (!verifyApiToken(req.headers.authorization, process.env.ENTERPRISE_API_TOKEN)) {
     return res.status(401).set("Cache-Control", "no-store").json({ error: "Authentication required" });
   }
@@ -144,7 +151,9 @@ app.get("/api/whatsapp/status", (req, res) => {
 });
 
 app.post("/api/whatsapp/status", (req, res) => {
-  whatsappStatus = { ...whatsappStatus, ...req.body };
+  const patch = parseStatusPatch(req.body);
+  if (!patch) return res.status(400).json({error:"Invalid status settings"});
+  whatsappStatus = { ...whatsappStatus, ...patch };
   res.json({ success: true, status: whatsappStatus });
 });
 
@@ -154,7 +163,9 @@ app.get("/api/chats", (req, res) => {
 
 app.post("/api/chats/:chatId/messages", async (req, res) => {
   const { chatId } = req.params;
-  const { text, sender = "customer" } = req.body;
+  const parsed = parseChatMessage(req.body);
+  if (!parsed) return res.status(400).json({error:"Invalid chat message"});
+  const { text, sender } = parsed;
 
   const chat = chats.find(c => c.id === chatId);
   if (!chat) {
@@ -199,7 +210,7 @@ Behavior guidelines:
       };
       chat.messages.push(aiMessage);
     } catch (err: any) {
-      console.error("Gemini AI WhatsApp auto-reply error:", err);
+      console.error("Gemini AI WhatsApp auto-reply failed");
       aiMessage = {
         id: "ai_" + Date.now(),
         sender: "ai",
@@ -218,7 +229,9 @@ app.get("/api/kb/documents", (req, res) => {
 });
 
 app.post("/api/kb/documents", (req, res) => {
-  const { title, category, size } = req.body;
+  const parsed = parseKnowledgeDocument(req.body);
+  if (!parsed) return res.status(400).json({error:"Invalid document metadata"});
+  const { title, category, size } = parsed;
   const newDoc = {
     id: "doc_" + Date.now(),
     title: title || "New Document",
@@ -232,7 +245,9 @@ app.post("/api/kb/documents", (req, res) => {
 });
 
 app.post("/api/ai/broadcast", async (req, res) => {
-  const { campaignTitle, targetAudience, promptText, language } = req.body;
+  const parsed = parseBroadcastDraft(req.body);
+  if (!parsed) return res.status(400).json({error:"Invalid broadcast request"});
+  const { campaignTitle, targetAudience, promptText, language } = parsed;
   try {
     const resAi = await ai.models.generateContent({
       model: "gemini-3.6-flash",
@@ -246,7 +261,7 @@ Include clear call to action and WhatsApp formatting (emojis, bolding).`,
 
     res.json({ success: true, broadcastText: resAi.text });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || "Failed to generate broadcast" });
+    res.status(503).json({ error: "Broadcast generation temporarily unavailable" });
   }
 });
 
@@ -276,7 +291,7 @@ app.post("/api/whatsapp/test-dm", async (req, res) => {
     const result = await whatsAppEngineService.testRealDm(recipient, message);
     res.json(result);
   } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(400).json({ success: false, error: "Unable to process request" });
   }
 });
 
@@ -290,11 +305,9 @@ app.post("/api/whatsapp/engine/webhook", async (req, res) => {
 });
 
 app.post("/api/whatsapp/engine/send", (req, res) => {
-  const { recipient, messageBody, options } = req.body;
-  if (!recipient || !messageBody) {
-    return res.status(400).json({ error: "Recipient and messageBody are required" });
-  }
-  const queueId = whatsAppEngineService.sendOutboundMessage(recipient, messageBody, options);
+  const parsed = parseOutboundRequest(req.body);
+  if (!parsed) return res.status(400).json({ error: "Invalid outbound request" });
+  const queueId = whatsAppEngineService.sendOutboundMessage(parsed.recipient, parsed.messageBody, parsed.options);
   res.json({ success: true, queueId, status: "queued" });
 });
 

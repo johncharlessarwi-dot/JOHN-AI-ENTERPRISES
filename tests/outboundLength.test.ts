@@ -21,3 +21,7 @@ test('rejects hidden control characters in outbound text', () => {
   assert.equal(validateOutgoingText('Hello\u001Bworld'), false);
   assert.equal(validateOutgoingText('Hello\u007Fworld'), false);
 });
+
+test('outboundLength blocks invisible direction marks',()=>{
+ for (const code of [0x200E,0x200F,0x202E,0x2066]) assert.equal(validateOutgoingText('Hello'+String.fromCharCode(code)),false);
+});
