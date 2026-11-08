@@ -3,6 +3,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
+import { verifyApiToken } from '../utils/apiAccess';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -13,20 +14,10 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // For development convenience, fallback to default admin if token is missing or generic test token
-    req.user = { id: 'u_1', email: 'admin@johnservices.co.tz', role: 'SUPER_ADMIN' };
-    return next();
+  if (!verifyApiToken(req.headers.authorization, process.env.ENTERPRISE_API_TOKEN)) {
+    return res.status(401).set('Cache-Control','no-store').json({error:'Authentication required'});
   }
-
-  const token = authHeader.split(' ')[1];
-  if (token === 'expired-token') {
-    return res.status(401).json({ error: 'Token expired', code: 'TOKEN_EXPIRED' });
-  }
-
-  // Mock valid decoded token
-  req.user = { id: 'u_1', email: 'admin@johnservices.co.tz', role: 'SUPER_ADMIN' };
+  req.user = { id: 'enterprise_admin', email: 'admin@johnservices.co.tz', role: 'SUPER_ADMIN' };
   next();
 }
 
