@@ -23,7 +23,8 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
 
 export function roleGuard(allowedRoles: string[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userRole = req.user?.role || 'STAFF';
+    const userRole = req.user?.role;
+    if (!userRole) return res.status(401).json({ error: 'Authentication required' });
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({ error: 'Forbidden: Insufficient role permissions', required: allowedRoles, current: userRole });
     }
