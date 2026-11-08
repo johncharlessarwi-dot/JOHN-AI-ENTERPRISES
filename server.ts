@@ -21,6 +21,7 @@ const PORT = 3000;
 app.use(express.json({ limit: "10mb" }));
 
 app.use("/api", (req, res, next) => {
+  res.set("Cache-Control", "no-store");
   if (req.path === "/health") return next();
   if (allowLocalDevApiBypass(process.env.NODE_ENV, process.env.ENTERPRISE_ALLOW_DEV_API_UNAUTH, req.socket.remoteAddress)) return next();
   if (!verifyApiToken(req.headers.authorization, process.env.ENTERPRISE_API_TOKEN)) {
