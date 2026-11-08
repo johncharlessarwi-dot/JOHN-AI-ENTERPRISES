@@ -210,7 +210,7 @@ Behavior guidelines:
       };
       chat.messages.push(aiMessage);
     } catch (err: any) {
-      console.error("Gemini AI WhatsApp auto-reply error:", err);
+      console.error("Gemini AI WhatsApp auto-reply failed");
       aiMessage = {
         id: "ai_" + Date.now(),
         sender: "ai",
@@ -291,7 +291,7 @@ app.post("/api/whatsapp/test-dm", async (req, res) => {
     const result = await whatsAppEngineService.testRealDm(recipient, message);
     res.json(result);
   } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(400).json({ success: false, error: "Unable to process request" });
   }
 });
 
