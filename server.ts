@@ -3,6 +3,7 @@ import { verifyApiToken } from "./server/utils/apiAccess";
 import { allowLocalDevApiBypass } from "./server/utils/devApiAccess";
 import { parseChatMessage } from "./server/utils/chatMessage";
 import { parseBroadcastDraft } from "./server/utils/broadcastDraft";
+import { parseStatusPatch } from "./server/utils/statusPatch";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -147,7 +148,9 @@ app.get("/api/whatsapp/status", (req, res) => {
 });
 
 app.post("/api/whatsapp/status", (req, res) => {
-  whatsappStatus = { ...whatsappStatus, ...req.body };
+  const patch = parseStatusPatch(req.body);
+  if (!patch) return res.status(400).json({error:"Invalid status settings"});
+  whatsappStatus = { ...whatsappStatus, ...patch };
   res.json({ success: true, status: whatsappStatus });
 });
 
