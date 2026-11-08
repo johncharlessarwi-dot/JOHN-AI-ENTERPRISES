@@ -32,13 +32,13 @@ export function roleGuard(allowedRoles: string[]) {
   };
 }
 
-export function errorHandlerMiddleware(err: any, req: Request, res: Response, next: NextFunction) {
-  console.error("Enterprise API Error:", err);
-  const status = err.status || 500;
-  res.status(status).json({
+export function errorHandlerMiddleware(err: unknown, req: Request, res: Response, next: NextFunction) {
+  // Never log raw provider exceptions; they may contain API tokens or customer data.
+  console.error('Enterprise API request failed');
+  res.set('Cache-Control','no-store').status(500).json({
     success: false,
-    error: err.message || 'Internal Server Error',
-    code: err.code || 'INTERNAL_ERROR',
+    error: 'Internal Server Error',
+    code: 'INTERNAL_ERROR',
     timestamp: new Date().toISOString()
   });
 }
