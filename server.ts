@@ -2,6 +2,7 @@ import express from "express";
 import { verifyApiToken } from "./server/utils/apiAccess";
 import { allowLocalDevApiBypass } from "./server/utils/devApiAccess";
 import { parseChatMessage } from "./server/utils/chatMessage";
+import { parseBroadcastDraft } from "./server/utils/broadcastDraft";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -236,7 +237,9 @@ app.post("/api/kb/documents", (req, res) => {
 });
 
 app.post("/api/ai/broadcast", async (req, res) => {
-  const { campaignTitle, targetAudience, promptText, language } = req.body;
+  const parsed = parseBroadcastDraft(req.body);
+  if (!parsed) return res.status(400).json({error:"Invalid broadcast request"});
+  const { campaignTitle, targetAudience, promptText, language } = parsed;
   try {
     const resAi = await ai.models.generateContent({
       model: "gemini-3.6-flash",
@@ -250,7 +253,7 @@ Include clear call to action and WhatsApp formatting (emojis, bolding).`,
 
     res.json({ success: true, broadcastText: resAi.text });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || "Failed to generate broadcast" });
+    res.status(503).json({ error: "Broadcast generation temporarily unavailable" });
   }
 });
 
