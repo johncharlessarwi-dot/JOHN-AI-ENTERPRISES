@@ -6,6 +6,7 @@ import { parseBroadcastDraft } from "./server/utils/broadcastDraft";
 import { parseStatusPatch } from "./server/utils/statusPatch";
 import { parseKnowledgeDocument } from "./server/utils/knowledgeDocument";
 import { parseOutboundRequest } from "./server/utils/outboundRequest";
+import { parseWhatsAppConfigUpdate } from "./server/utils/whatsappConfig";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -275,8 +276,9 @@ app.get("/api/whatsapp/config", (req, res) => {
 });
 
 app.post("/api/whatsapp/config", (req, res) => {
-  const result = whatsAppEngineService.saveConfig(req.body);
-  res.json(result);
+  const update = parseWhatsAppConfigUpdate(req.body);
+  if (!update) return res.status(400).json({ error: "Invalid WhatsApp configuration" });
+  res.json(whatsAppEngineService.saveConfig(update));
 });
 
 app.post("/api/whatsapp/toggle", (req, res) => {
