@@ -20,6 +20,15 @@ import { devOpsService } from "./server/devopsService";
 const app = express();
 const PORT = 3000;
 
+app.disable("x-powered-by");
+app.use((_req, res, next) => {
+  res.set({
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+  });
+  next();
+});
+
 app.use("/api", (req, res, next) => {
   res.set("Cache-Control", "no-store");
   if (req.path === "/health" && (req.method === "GET" || req.method === "HEAD")) return next();
@@ -475,10 +484,10 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*all", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+    const clientPath = path.join(process.cwd(), "dist", "client");
+    app.use(express.static(clientPath));
+    app.get(/.*/, (_req, res) => {
+      res.sendFile(path.join(clientPath, "index.html"));
     });
   }
 
