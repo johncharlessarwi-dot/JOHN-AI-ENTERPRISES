@@ -8,6 +8,7 @@ import { parseStatusPatch } from "./server/utils/statusPatch";
 import { parseKnowledgeDocument } from "./server/utils/knowledgeDocument";
 import { parseOutboundRequest } from "./server/utils/outboundRequest";
 import { parseWhatsAppConfigUpdate } from "./server/utils/whatsappConfig";
+import { parseInvoice, parsePayment, parseQuotation } from "./server/utils/financeInputs";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -423,7 +424,9 @@ app.get("/api/finance/quotations", (req, res) => {
 });
 
 app.post("/api/finance/quotations", (req, res) => {
-  const created = businessAutomationService.createQuotation(req.body);
+  const input = parseQuotation(req.body);
+  if (!input) return res.status(400).json({ error: "Invalid quotation" });
+  const created = businessAutomationService.createQuotation(input);
   res.json({ success: true, created });
 });
 
@@ -432,7 +435,9 @@ app.get("/api/finance/invoices", (req, res) => {
 });
 
 app.post("/api/finance/invoices", (req, res) => {
-  const created = businessAutomationService.createInvoice(req.body);
+  const input = parseInvoice(req.body);
+  if (!input) return res.status(400).json({ error: "Invalid invoice" });
+  const created = businessAutomationService.createInvoice(input);
   res.json({ success: true, created });
 });
 
@@ -441,7 +446,9 @@ app.get("/api/finance/payments", (req, res) => {
 });
 
 app.post("/api/finance/payments", (req, res) => {
-  const created = businessAutomationService.recordPayment(req.body);
+  const input = parsePayment(req.body);
+  if (!input) return res.status(400).json({ error: "Invalid payment" });
+  const created = businessAutomationService.recordPayment(input);
   res.json({ success: true, created });
 });
 
