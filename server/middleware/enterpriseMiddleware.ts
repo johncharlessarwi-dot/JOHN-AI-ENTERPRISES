@@ -32,7 +32,25 @@ export function roleGuard(allowedRoles: string[]) {
   };
 }
 
-export function errorHandlerMiddleware(err: unknown, req: Request, res: Response, next: NextFunction) {
+const jsonErrors = new Map<string, { status: number; error: string; code: string }>([
+  ['entity.parse.failed', { status: 400, error: 'Invalid JSON body', code: 'INVALID_JSON' }],
+  ['request.size.invalid', { status: 400, error: 'Invalid request body', code: 'INVALID_BODY' }],
+  ['request.aborted', { status: 400, error: 'Invalid request body', code: 'INVALID_BODY' }],
+  ['entity.too.large', { status: 413, error: 'Request body too large', code: 'BODY_TOO_LARGE' }],
+  ['encoding.unsupported', { status: 415, error: 'Unsupported request encoding', code: 'UNSUPPORTED_ENCODING' }],
+  ['charset.unsupported', { status: 415, error: 'Unsupported request encoding', code: 'UNSUPPORTED_ENCODING' }],
+]);
+
+export function errorHandlerMiddleware(err: unknown, _req: Request, res: Response, next: NextFunction) {
+  if (res.headersSent) return next(new Error('Enterprise API response failed'));
+
+  const type = err && typeof err === 'object' && 'type' in err ? err.type : undefined;
+  const clientError = typeof type === 'string' ? jsonErrors.get(type) : undefined;
+  if (clientError) {
+    const { status, error, code } = clientError;
+    return res.set('Cache-Control', 'no-store').status(status).json({ success: false, error, code });
+  }
+
   // Never log raw provider exceptions; they may contain API tokens or customer data.
   console.error('Enterprise API request failed');
   res.set('Cache-Control','no-store').status(500).json({

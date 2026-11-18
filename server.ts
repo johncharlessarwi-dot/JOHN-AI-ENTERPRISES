@@ -1,6 +1,7 @@
 import express from "express";
 import { verifyApiToken } from "./server/utils/apiAccess";
 import { allowLocalDevApiBypass } from "./server/utils/devApiAccess";
+import { errorHandlerMiddleware } from "./server/middleware/enterpriseMiddleware";
 import { parseChatMessage } from "./server/utils/chatMessage";
 import { parseBroadcastDraft } from "./server/utils/broadcastDraft";
 import { parseStatusPatch } from "./server/utils/statusPatch";
@@ -19,17 +20,17 @@ import { devOpsService } from "./server/devopsService";
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: "10mb" }));
-
 app.use("/api", (req, res, next) => {
   res.set("Cache-Control", "no-store");
-  if (req.path === "/health") return next();
+  if (req.path === "/health" && (req.method === "GET" || req.method === "HEAD")) return next();
   if (allowLocalDevApiBypass(process.env.NODE_ENV, process.env.ENTERPRISE_ALLOW_DEV_API_UNAUTH, req.socket.remoteAddress)) return next();
   if (!verifyApiToken(req.headers.authorization, process.env.ENTERPRISE_API_TOKEN)) {
     return res.status(401).set("Cache-Control", "no-store").json({ error: "Authentication required" });
   }
   next();
 });
+
+app.use("/api", express.json({ limit: "256kb", inflate: false }));
 
 // Initialize Gemini AI client server-side
 const ai = new GoogleGenAI({
@@ -301,8 +302,8 @@ app.post("/api/whatsapp/engine/webhook", async (req, res) => {
   try {
     const normalized = await whatsAppEngineService.processIncomingMessage(req.body);
     res.json({ success: true, normalized });
-  } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+  } catch {
+    res.status(400).json({ success: false, error: "Unable to process webhook" });
   }
 });
 
@@ -331,12 +332,12 @@ app.post("/api/ai/brain/prompts", (req, res) => {
   res.json({ success: true, updated });
 });
 
-app.post("/api/ai/brain/process", async (req, res) => {
+app.post("/api/ai/brain/process", async (req, res, next) => {
   try {
     const result = await aiBrainIntelligenceService.processMessageWithAiBrain(req.body);
     res.json(result);
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -461,6 +462,9 @@ app.get("/api/devops/status", (req, res) => {
 app.post("/api/devops/backup", (req, res) => {
   res.json(devOpsService.triggerManualBackup());
 });
+
+app.use("/api", (_req, res) => res.status(404).json({ error: "API route not found" }));
+app.use("/api", errorHandlerMiddleware);
 
 // Vite middleware setup for development / static serving for production
 async function startServer() {

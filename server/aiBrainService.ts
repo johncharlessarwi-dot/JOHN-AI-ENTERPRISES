@@ -141,8 +141,8 @@ You must return a JSON response with the following keys:
         tokenUsage: { promptTokens: 380, completionTokens: 145, totalTokens: 525 },
         processingTimeMs
       };
-    } catch (err: any) {
-      console.error("AI Brain processing error:", err);
+    } catch {
+      console.error("AI Brain processing failed");
       const processingTimeMs = Date.now() - startTime;
       return {
         success: false,
