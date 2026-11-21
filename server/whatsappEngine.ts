@@ -4,6 +4,7 @@
  */
 
 import { EventEmitter } from 'events';
+import { publicWhatsAppConfig, type WhatsAppConfigUpdate } from './utils/whatsappConfig';
 
 export interface WhatsAppEngineConfig {
   provider: 'meta_cloud' | 'baileys';
@@ -211,7 +212,7 @@ export class WhatsAppEngineService {
     }, 10000);
   }
 
-  public saveConfig(newConfig: Partial<WhatsAppEngineConfig>) {
+  public saveConfig(newConfig: WhatsAppConfigUpdate) {
     this.config = { ...this.config, ...newConfig };
     if (this.config.phoneNumberId && this.config.accessToken) {
       this.connectionStatus.connected = true;
@@ -220,7 +221,7 @@ export class WhatsAppEngineService {
   }
 
   public getConfig() {
-    return { ...this.config, accessToken: this.config.accessToken ? '[REDACTED]' : '' };
+    return publicWhatsAppConfig(this.config);
   }
 
   public setConnectionState(connected: boolean) {

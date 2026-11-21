@@ -1,11 +1,14 @@
 import express from "express";
 import { verifyApiToken } from "./server/utils/apiAccess";
 import { allowLocalDevApiBypass } from "./server/utils/devApiAccess";
+import { errorHandlerMiddleware } from "./server/middleware/enterpriseMiddleware";
 import { parseChatMessage } from "./server/utils/chatMessage";
 import { parseBroadcastDraft } from "./server/utils/broadcastDraft";
 import { parseStatusPatch } from "./server/utils/statusPatch";
 import { parseKnowledgeDocument } from "./server/utils/knowledgeDocument";
 import { parseOutboundRequest } from "./server/utils/outboundRequest";
+import { parseWhatsAppConfigUpdate } from "./server/utils/whatsappConfig";
+import { parseInvoice, parsePayment, parseQuotation } from "./server/utils/financeInputs";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -18,17 +21,26 @@ import { devOpsService } from "./server/devopsService";
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: "10mb" }));
+app.disable("x-powered-by");
+app.use((_req, res, next) => {
+  res.set({
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+  });
+  next();
+});
 
 app.use("/api", (req, res, next) => {
   res.set("Cache-Control", "no-store");
-  if (req.path === "/health") return next();
+  if (req.path === "/health" && (req.method === "GET" || req.method === "HEAD")) return next();
   if (allowLocalDevApiBypass(process.env.NODE_ENV, process.env.ENTERPRISE_ALLOW_DEV_API_UNAUTH, req.socket.remoteAddress)) return next();
   if (!verifyApiToken(req.headers.authorization, process.env.ENTERPRISE_API_TOKEN)) {
     return res.status(401).set("Cache-Control", "no-store").json({ error: "Authentication required" });
   }
   next();
 });
+
+app.use("/api", express.json({ limit: "256kb", inflate: false }));
 
 // Initialize Gemini AI client server-side
 const ai = new GoogleGenAI({
@@ -275,8 +287,9 @@ app.get("/api/whatsapp/config", (req, res) => {
 });
 
 app.post("/api/whatsapp/config", (req, res) => {
-  const result = whatsAppEngineService.saveConfig(req.body);
-  res.json(result);
+  const update = parseWhatsAppConfigUpdate(req.body);
+  if (!update) return res.status(400).json({ error: "Invalid WhatsApp configuration" });
+  res.json(whatsAppEngineService.saveConfig(update));
 });
 
 app.post("/api/whatsapp/toggle", (req, res) => {
@@ -299,8 +312,8 @@ app.post("/api/whatsapp/engine/webhook", async (req, res) => {
   try {
     const normalized = await whatsAppEngineService.processIncomingMessage(req.body);
     res.json({ success: true, normalized });
-  } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+  } catch {
+    res.status(400).json({ success: false, error: "Unable to process webhook" });
   }
 });
 
@@ -329,12 +342,12 @@ app.post("/api/ai/brain/prompts", (req, res) => {
   res.json({ success: true, updated });
 });
 
-app.post("/api/ai/brain/process", async (req, res) => {
+app.post("/api/ai/brain/process", async (req, res, next) => {
   try {
     const result = await aiBrainIntelligenceService.processMessageWithAiBrain(req.body);
     res.json(result);
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -411,7 +424,9 @@ app.get("/api/finance/quotations", (req, res) => {
 });
 
 app.post("/api/finance/quotations", (req, res) => {
-  const created = businessAutomationService.createQuotation(req.body);
+  const input = parseQuotation(req.body);
+  if (!input) return res.status(400).json({ error: "Invalid quotation" });
+  const created = businessAutomationService.createQuotation(input);
   res.json({ success: true, created });
 });
 
@@ -420,7 +435,9 @@ app.get("/api/finance/invoices", (req, res) => {
 });
 
 app.post("/api/finance/invoices", (req, res) => {
-  const created = businessAutomationService.createInvoice(req.body);
+  const input = parseInvoice(req.body);
+  if (!input) return res.status(400).json({ error: "Invalid invoice" });
+  const created = businessAutomationService.createInvoice(input);
   res.json({ success: true, created });
 });
 
@@ -429,7 +446,9 @@ app.get("/api/finance/payments", (req, res) => {
 });
 
 app.post("/api/finance/payments", (req, res) => {
-  const created = businessAutomationService.recordPayment(req.body);
+  const input = parsePayment(req.body);
+  if (!input) return res.status(400).json({ error: "Invalid payment" });
+  const created = businessAutomationService.recordPayment(input);
   res.json({ success: true, created });
 });
 
@@ -460,6 +479,9 @@ app.post("/api/devops/backup", (req, res) => {
   res.json(devOpsService.triggerManualBackup());
 });
 
+app.use("/api", (_req, res) => res.status(404).json({ error: "API route not found" }));
+app.use("/api", errorHandlerMiddleware);
+
 // Vite middleware setup for development / static serving for production
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
@@ -469,10 +491,10 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*all", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+    const clientPath = path.join(process.cwd(), "dist", "client");
+    app.use(express.static(clientPath));
+    app.get(/.*/, (_req, res) => {
+      res.sendFile(path.join(clientPath, "index.html"));
     });
   }
 

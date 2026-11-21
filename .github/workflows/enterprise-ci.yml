@@ -17,6 +17,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Reject tracked environment files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-files -z -- ':(glob,icase)**/.env*' | while IFS= read -r -d '' path; do
+            if [[ "$path" != .env.example ]]; then
+              echo 'Unexpected tracked environment file. Review the Git index privately.' >&2
+              exit 1
+            fi
+          done
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run lint
