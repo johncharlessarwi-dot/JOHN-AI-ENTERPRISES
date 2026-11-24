@@ -44,11 +44,11 @@ export function Sidebar({ currentTab, setCurrentTab, whatsappConnected, mobileOp
         />
       )}
 
-      <aside className={`
+      <aside id="workspace-navigation" className={`
         fixed lg:static inset-y-0 left-0 z-50
         w-72 bg-[#0f172a] text-slate-100 flex flex-col border-r border-slate-800 shrink-0 select-none
         transform transition-transform duration-300 ease-in-out
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${mobileOpen ? 'translate-x-0' : 'invisible -translate-x-full lg:visible lg:translate-x-0'}
       `}>
         {/* Brand Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between">
@@ -65,6 +65,7 @@ export function Sidebar({ currentTab, setCurrentTab, whatsappConnected, mobileOp
             </div>
           </div>
           <button 
+            aria-label="Close navigation"
             onClick={() => setMobileOpen(false)}
             className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
@@ -95,6 +96,7 @@ export function Sidebar({ currentTab, setCurrentTab, whatsappConnected, mobileOp
             return (
               <button
                 key={item.id}
+                aria-current={isActive ? "page" : undefined}
                 onClick={() => {
                   setCurrentTab(item.id);
                   setMobileOpen(false);
