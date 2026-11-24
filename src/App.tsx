@@ -100,6 +100,9 @@ export default function App() {
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-slate-950 border-b border-slate-800 text-white shrink-0">
           <div className="flex items-center gap-3">
             <button 
+              aria-label="Open navigation"
+              aria-expanded={mobileOpen}
+              aria-controls="workspace-navigation"
               onClick={() => setMobileOpen(true)}
               className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 hover:text-white transition-colors cursor-pointer"
               aria-label="Open menu"
